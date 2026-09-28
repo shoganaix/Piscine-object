@@ -6,14 +6,14 @@
 /*   By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/28 18:30:16 by msoriano          #+#    #+#             */
-/*   Updated: 2026/09/28 19:12:15 by msoriano         ###   ########.fr       */
+/*   Updated: 2026/09/28 21:42:00 by msoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Bank.hpp"
-
 # include <ostream>		// stream operators (<<)
 # include <stdexcept>	// std::out_of_range + std::invalid_argument, used for  error handling
+# include <limits>		// std::numeric_limits
 
 
 // Private constructor of nested class, reachable only through friend class Bank
@@ -64,6 +64,9 @@ void	Bank::checkAmount(int p_amount) const
 // Constructor from initial liquidity
 Bank::Bank(int p_liquidity) :_liquidity(p_liquidity),_accounts()
 {
+	// <= 0 money -> throws
+	if (p_liquidity < 0)
+		throw (std::invalid_argument("Bank: initial liquidity cannot be negative"));
 }
 
 // Copy constructor
@@ -140,10 +143,14 @@ void	Bank::deposit(int p_id, int p_amount)
 	checkAmount(p_amount);
 	// Resolve the account once, this method mutates it
 	iterator it = findAccount(p_id);
-	const int commission = p_amount * 5 / 100;
-	
+	const int commission = p_amount / 20; // '* 100 / 5 'alternative to avoid overflow
 	// clients
-	it->second._value += p_amount - commission;
+	const int clientAmount = p_amount - commission;
+	if (clientAmount > std::numeric_limits<int>::max() - it->second._value) // overflow check
+		throw (std::overflow_error("Bank: account balance overflow"));
+	if (commission > std::numeric_limits<int>::max() - _liquidity) // overflow check
+		throw (std::overflow_error("Bank: liquidity overflow"));
+	it->second._value += clientAmount;
 	// banks
 	_liquidity += commission;
 }
@@ -156,6 +163,8 @@ bool	Bank::giveLoan(int p_id, int p_amount)
 	// banks bankrupt -> doesnt loan
 	if (p_amount > _liquidity)
 		return (false);
+	if (p_amount > std::numeric_limits<int>::max() - it->second._value) // overflow check
+		throw (std::overflow_error("Bank: account balance overflow"));
 	// banks
 	_liquidity -= p_amount;
 	// clients

@@ -85,7 +85,7 @@ make[1]: Nothing to be done for 'all'.
 There is deliberately **no `Account.hpp`** in `ex00`. The bonus requires the account
 to be *internal* to the bank, and a nested class must be declared inside the body of
 its enclosing class, so it cannot live in a header of its own. It is declared at the
-top of [`ex00/Bank.hpp:48`](ex00/Bank.hpp).
+top of [`ex00/Bank.hpp:38`](ex00/Bank.hpp).
 
 ## 4. Exercise 00 — the bank
 
@@ -101,27 +101,33 @@ Bank informations :
 Liquidity : 999
 
 === Account creation ===
+Bank informations :
+Liquidity : 999
 [0] - [100]
 [1] - [100]
 
 === Deposit, the bank keeps 5% ===
 Alice now owns : 480
 Bank liquidity : 1019
-
+Alice id is still : 0
 === Loans ===
 Loan of 200 granted : 1
 Bob now owns : 300
 Loan of 100000 granted : 0
 Liquidity untouched : 819
-
 === Account deletion ===
+Accounts left : 1
 Bob id after the deletion : 1
 Bob now owns : 300
+Bank informations :
+Liquidity : 819
+[1] - [300]
 
 === Refused operations ===
 Caught : Bank: unknown account id
 Caught : Bank: amount must be strictly positive
 Caught : Bank: this account id is already taken
+Bob was not altered : 300
 ```
 
 The arithmetic is the proof that the encapsulation works: a deposit of 400 leaves
@@ -270,22 +276,22 @@ the reason behind it.
 
 | Subject requirement | Where |
 |---|---|
-| The bank receives 5% of each money inflow | [`ex00/Bank.cpp:131`](ex00/Bank.cpp) `Bank::deposit` |
-| The accounts never have two identical IDs | [`ex00/Bank.cpp:110`](ex00/Bank.cpp) `Bank::createAccount` rejects a taken id, and the map key makes it structurally impossible |
-| The attributes are not modifiable from the outside | [`ex00/Bank.hpp:56`](ex00/Bank.hpp) and [`ex00/Bank.hpp:97`](ex00/Bank.hpp), both `private` |
-| The bank creates, deletes and modifies accounts | [`ex00/Bank.hpp:91`](ex00/Bank.hpp) `createAccount` / `deleteAccount` / `deposit` |
-| The bank gives a loan within the limits of its funds | [`ex00/Bank.cpp:144`](ex00/Bank.cpp) `Bank::giveLoan` |
+| The bank receives 5% of each money inflow | [`ex00/Bank.cpp:138`](ex00/Bank.cpp) `Bank::deposit` |
+| The accounts never have two identical IDs | [`ex00/Bank.cpp:116`](ex00/Bank.cpp) `Bank::createAccount` rejects a taken id, and the map key makes it structurally impossible |
+| The attributes are not modifiable from the outside | [`ex00/Bank.hpp:54-55`](ex00/Bank.hpp) and [`ex00/Bank.hpp:89-90`](ex00/Bank.hpp), both `private` |
+| The bank creates, deletes and modifies accounts | [`ex00/Bank.hpp:73-75`](ex00/Bank.hpp) `createAccount` / `deleteAccount` / `deposit` |
+| The bank gives a loan within the limits of its funds | [`ex00/Bank.cpp:152`](ex00/Bank.cpp) `Bank::giveLoan` |
 | Impossible to add money without going through the bank | `Account::_value` is private and `Bank` is its only friend; `deposit` is the only method that credits it |
-| Getters, not accepted by copy | [`ex00/Bank.hpp:87`](ex00/Bank.hpp) `getAccount` returns `const Account&` |
-| Mandatory const getters | [`ex00/Bank.hpp:86-89`](ex00/Bank.hpp), every accessor is marked `const` |
+| Getters, not accepted by copy | [`ex00/Bank.hpp:69`](ex00/Bank.hpp) `getAccount` returns `const Account&` |
+| Mandatory const getters | [`ex00/Bank.hpp:68-71`](ex00/Bank.hpp), every accessor is marked `const` |
 
 ### ex00 — the "Divide and Govern" bonus
 
 | Bonus requirement | Where |
 |---|---|
-| `operator[]` by id, with no `for` or `while` | [`ex00/Bank.cpp:92`](ex00/Bank.cpp). The body is one expression, the tree descent happens inside `std::map` |
-| No methods in `Account` other than const getters | [`ex00/Bank.hpp:50-54`](ex00/Bank.hpp). Only `getId` and `getValue`, both `const` |
-| `Account` internal to `Bank` | [`ex00/Bank.hpp:48`](ex00/Bank.hpp), declared inside the body of `Bank` |
+| `operator[]` by id, with no `for` or `while` | [`ex00/Bank.cpp:89`](ex00/Bank.cpp). The body is one expression, the tree descent happens inside `std::map` |
+| No methods in `Account` other than const getters | [`ex00/Bank.hpp:42-43`](ex00/Bank.hpp). Only `getId` and `getValue`, both `const` |
+| `Account` internal to `Bank` | [`ex00/Bank.hpp:38`](ex00/Bank.hpp), declared inside the body of `Bank` |
 | Error handling through `throw`, handled in `main` | [`ex00/main.cpp`](ex00/main.cpp), one `try`/`catch` per misuse plus a final safety net |
 
 ### ex01 — the mandatory requirements
@@ -293,17 +299,17 @@ the reason behind it.
 | Subject requirement | Where |
 |---|---|
 | `Vector2` holds an `x` and a `y` | [`ex01/Vector2.hpp:51-52`](ex01/Vector2.hpp) `_x` and `_y`, both `float` |
-| A `Graph` with a size and a list of points | [`ex01/Graph.hpp:55-56`](ex01/Graph.hpp) |
-| The user can add a point | [`ex01/Graph.cpp:120`](ex01/Graph.cpp) `Graph::addPoint` |
-| The user can print the graph on the console | [`ex01/Graph.cpp:153`](ex01/Graph.cpp) `Graph::display` |
+| A `Graph` with a size and a list of points | [`ex01/Graph.hpp:41-42`](ex01/Graph.hpp) |
+| The user can add a point | [`ex01/Graph.cpp:103`](ex01/Graph.cpp) `Graph::addPoint` |
+| The user can print the graph on the console | [`ex01/Graph.cpp:149`](ex01/Graph.cpp) `Graph::display` |
 | The encapsulation decision must be explainable | [§6](#ex01--the-graph) above |
 
 ### ex01 — the "What am i looking at ?!" bonus
 
 | Bonus requirement | Where |
 |---|---|
-| Add a line feature | [`ex01/Graph.cpp:128`](ex01/Graph.cpp) `Graph::addLine` |
-| Read an input file containing a list of points | [`ex01/Graph.cpp:40`](ex01/Graph.cpp) `Graph::fromFile`, sample in [`ex01/points.txt`](ex01/points.txt) |
+| Add a line feature | [`ex01/Graph.cpp:117`](ex01/Graph.cpp) `Graph::addLine` |
+| Read an input file containing a list of points | [`ex01/Graph.cpp:29`](ex01/Graph.cpp) `Graph::fromFile`, sample in [`ex01/points.txt`](ex01/points.txt) |
 | A PNG rendering of the graph | **Not done.** Producing a PNG requires an image library, and the subject forbids any external library. See [§8](#8-decisiones-que-hay-que-defender) for the reasoning. |
 
 ## 8. Decisiones que hay que defender

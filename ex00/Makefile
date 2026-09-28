@@ -3,48 +3,36 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: root <root@student.42.fr>                  +#+  +:+       +#+         #
+#    By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/09/28 17:40:49 by root              #+#    #+#              #
-#    Updated: 2026/09/28 17:40:50 by root             ###   ########.fr        #
+#    Updated: 2026/09/28 18:53:12 by msoriano         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-# ---- Configuration ---------------------------------------------------------- #
+NAME     := ex00
+CXX      := c++
+CXXFLAGS := -Wall -Wextra -Werror -std=c++98
 
-NAME     := ex00								# Name of the binary, the rule $(NAME) is required by the subject
-CXX      := c++									# C++ compiler, mandated by the subject
-CXXFLAGS := -Wall -Wextra -Werror -std=c++98	# Mandatory warnings, mandatory C++98 dialect
+SRCS     := main.cpp Bank.cpp
+OBJS     := $(SRCS:.cpp=.o)
+DEPS     := Bank.hpp
 
-# ---- Sources ---------------------------------------------------------------- #
+all: $(NAME)
 
-SRCS     := main.cpp Bank.cpp					# Every translation unit of the exercise
-OBJS     := $(SRCS:.cpp=.o)						# Objects, derived from the sources by substitution
-DEPS     := Bank.hpp								# Headers listed explicitly, so a header change forces a rebuild
+$(NAME): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 
-# ---- Rules ------------------------------------------------------------------ #
 
-# Default rule, runs when make is called with no argument
-all: $(NAME)										# 'all' must build the binary, as required by the subject
+%.o: %.cpp $(DEPS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Link step. Depends on the objects, so make never relinks when they are up to date.
-$(NAME): $(OBJS)									# The binary depends on every object
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $@			# Link all the objects into the final executable
+clean:
+	rm -f $(OBJS)
 
-# Compile step. The header list in the recipe forces a rebuild when a header changes.
-%.o: %.cpp $(DEPS)								# Pattern rule: any .cpp becomes its .o
-	$(CXX) $(CXXFLAGS) -c $< -o $@				# $< is the first prerequisite, that is the source file
+fclean: clean
+	rm -f $(NAME)
 
-# Remove the object files, keep the binary
-clean:											# 'clean' is required by the subject
-	rm -f $(OBJS)									# Delete every object, -f so a missing file is not an error
+re: fclean all
 
-# Remove the object files and the binary
-fclean: clean										# 'fclean' is required by the subject, it extends clean
-	rm -f $(NAME)									# Delete the executable
-
-# Rebuild everything from scratch
-re: fclean all									# 're' is required by the subject, it is fclean followed by all
-
-# Marks the targets that produce no file, so they always run
-.PHONY: all clean fclean re						# Prevents make from skipping these on a second call
+.PHONY: all clean fclean re

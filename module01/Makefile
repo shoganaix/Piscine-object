@@ -5,23 +5,26 @@
 #                                                     +:+ +:+         +:+      #
 #    By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/09/28 17:40:49 by root              #+#    #+#              #
+#    Created: 2026/09/28 22:26:21 by msoriano          #+#    #+#              #
 #    Updated: 2026/09/28 22:26:21 by msoriano         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-# The modules of the piscine, each one owns the Makefiles of its own exercises
-MODULES := module00 module01
+# The exercises of module 01, in the order the subject lists them
+EXERCISES := ex00
 
-# Root Makefile doesnt build anything instead forwards each goal to the module
-# Makefiles, which in turn forward it to their exercises. The chain is:
-#     make (root)  ->  make (moduleXX)  ->  make (moduleXX/exYY)
+# This Makefile builds nothing itself, it only forwards the goals down to each exercise
 
-# The loop stops at first failure, so a broken exercise is never hidden behind
+# The loop stops at the first failure, so a broken exercise is never hidden
+# behind a later one that happens to succeed
 all clean fclean re:
-	@for mod in $(MODULES); do \
-		echo "--- $$mod : $@ ---"; \
-		$(MAKE) -C $$mod $@ || exit 1; \
+	@for dir in $(EXERCISES); do \
+		echo "--- module01/$$dir : $@ ---"; \
+		$(MAKE) -C $$dir $@ || exit 1; \
 	done
 
-.PHONY: all clean fclean re
+# Building a single exercise without going through the whole module
+ex00:
+	@$(MAKE) -C ex00 all
+
+.PHONY: all clean fclean re ex00

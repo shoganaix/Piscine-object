@@ -5,23 +5,35 @@
 #                                                     +:+ +:+         +:+      #
 #    By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/09/28 17:40:49 by root              #+#    #+#              #
+#    Created: 2026/09/28 22:26:21 by msoriano          #+#    #+#              #
 #    Updated: 2026/09/28 22:26:21 by msoriano         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-# The modules of the piscine, each one owns the Makefiles of its own exercises
-MODULES := module00 module01
+NAME     := ex00
+CXX      := c++
+CXXFLAGS := -Wall -Wextra -Werror -std=c++98
 
-# Root Makefile doesnt build anything instead forwards each goal to the module
-# Makefiles, which in turn forward it to their exercises. The chain is:
-#     make (root)  ->  make (moduleXX)  ->  make (moduleXX/exYY)
+SRCS     := main.cpp Tool.cpp Shovel.cpp Hammer.cpp Worker.cpp Workshop.cpp \
+            Position.cpp Statistic.cpp
+OBJS     := $(SRCS:.cpp=.o)
+DEPS     := Tool.hpp Shovel.hpp Hammer.hpp Worker.hpp Workshop.hpp \
+            Position.hpp Statistic.hpp
 
-# The loop stops at first failure, so a broken exercise is never hidden behind
-all clean fclean re:
-	@for mod in $(MODULES); do \
-		echo "--- $$mod : $@ ---"; \
-		$(MAKE) -C $$mod $@ || exit 1; \
-	done
+all: $(NAME)
+
+$(NAME): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+
+%.o: %.cpp $(DEPS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJS)
+
+fclean: clean
+	rm -f $(NAME)
+
+re: fclean all
 
 .PHONY: all clean fclean re

@@ -2,9 +2,8 @@
 # Object files produced by the Makefiles
 *.o
 
-# Executables, one per exercise: ex00/ex00 and ex01/ex01
-ex00/ex00
-ex01/ex01
+# Executables, one per exercise: module00/ex00/ex00, module00/ex01/ex01, ...
+module??/ex??/ex??
 
 # ---- Editor and system noise ------------------------------------------------ #
 .vscode/

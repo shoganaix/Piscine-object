@@ -3,50 +3,44 @@
 /*                                                        :::      ::::::::   */
 /*   Workshop.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+        */
+/*   By: root <root@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/28 22:26:21 by msoriano          #+#    #+#             */
-/*   Updated: 2026/09/28 22:26:21 by msoriano         ###   ########.fr       */
+/*   Updated: 2026/09/29 18:19:33 by root             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Workshop.hpp"
 
 # include <iostream>		// std::cout, std::endl
-# include <stdexcept>		// std::invalid_argument, used for error handling
+# include <stdexcept>		// std::invalid_argument
 
 
-// An open workshop, any worker may come in
 Workshop::Workshop(const std::string& p_name) :_name(p_name), _requiredTool(), _workers()
 {
 	std::cout << "[Workshop] ctor   \"" << _name << "\" opens, any worker is welcome" << std::endl;
 }
 
-// BONUS 2, a workshop that demands a tool before letting anybody in
+// BONUS: A workshop that demands a tool
 Workshop::Workshop(const std::string& p_name, const std::string& p_requiredTool)
 	:_name(p_name), _requiredTool(p_requiredTool), _workers()
 {
-	// empty name -> throws, it would silently build an open workshop
+	// empty name -> throws
 	if (_requiredTool.empty())
 		throw (std::invalid_argument("Workshop: the required tool cannot be an empty name"));
 
 	std::cout << "[Workshop] ctor   \"" << _name << "\" opens, only a worker with a " << _requiredTool << " may come in" << std::endl;
 }
 
-/* ! Note: the copy constructor and the copy assignment are DECLARED in the header
-* and deliberately NOT defined here, for the same reason as in Worker: cloning a
-* workshop would duplicate a roster that the workers know nothing about, and the
-* copies would immediately drift apart.
-*/
+/* ! Note: the copy constructor and the copy assignment are DECLARED but NOT defined
 // Workshop::Workshop(const Workshop& p_other) ;
 // Workshop&	Workshop::operator=(const Workshop& p_other) ;
+*/
 
-
-// Closes the workshop, the workers are NOT deleted, they are not its to destroy
+// Closes the workshop but the workers are NOT deleted (not virtual)
 Workshop::~Workshop()
 {
-	// The back references are cleared, otherwise a worker would keep pointing at a
-	// closed workshop and work() would send him there forever
+	// references are cleared
 	for (size_t i = 0; i < _workers.size(); i++)
 	{
 		std::cout << "[Workshop] dtor   \"" << _name << "\" closes while " << _workers[i]->getLabel() << " is still inside" << std::endl;
@@ -54,47 +48,42 @@ Workshop::~Workshop()
 	}
 }
 
-// Const name getter, by reference so the caller cannot rename a workshop
+// by reference so the caller cannot rename a workshop
 const std::string&	Workshop::getName(void) const
 {
 	return (_name);
 }
 
-// Const required tool getter
 const std::string&	Workshop::getRequiredTool(void) const
 {
 	return (_requiredTool);
 }
 
-// Number of workers CONST getter
 size_t	Workshop::getNbWorkers(void) const
 {
 	return (_workers.size());
 }
 
-// Linear search helper, shared by hasWorker, releaseWorker and _checkWorker
 bool	Workshop::_findWorker(const Worker* p_worker, size_t& p_index) const
 {
 	for (size_t i = 0; i < _workers.size(); i++)
 	{
 		if (_workers[i] == p_worker)
 		{
-			p_index = i;		// the caller needs the position, not only a yes or no
+			p_index = i;		// caller needs position too!
 			return (true);
 		}
 	}
-	return (false);				// p_index is left untouched, the caller must not use it
+	return (false);
 }
 
-// Const membership test
 bool	Workshop::hasWorker(const Worker* p_worker) const
 {
-	size_t	index;				// the position is of no interest here
+	size_t	index;
 	return (_findWorker(p_worker, index));
 }
 
 
-// BONUS 2, the filter that guards the door
 bool	Workshop::_hasRequiredTool(const Worker& p_worker) const
 {
 	// an open workshop takes anybody
@@ -104,11 +93,7 @@ bool	Workshop::_hasRequiredTool(const Worker& p_worker) const
 }
 
 
-/* ASSOCIATION, a worker signs up
- * - a null worker is a programming mistake -> throws
- * - already inside -> refused, a worker is never listed twice
- * - missing the required tool -> refused, that is BONUS 2
- */
+// Workers sign up
 bool	Workshop::enrolWorker(Worker* p_worker)
 {
 	// null pointer -> throws
@@ -122,7 +107,7 @@ bool	Workshop::enrolWorker(Worker* p_worker)
 		return (false);
 	}
 
-	// no tool, no entry -> refused
+	// no tool -> refused
 	if (!_hasRequiredTool(*p_worker))
 	{
 		std::cout << "[Workshop] enrol  " << p_worker->getLabel() << " is turned away, \"" << _name
@@ -130,10 +115,9 @@ bool	Workshop::enrolWorker(Worker* p_worker)
 		return (false);
 	}
 
+	// Both worker and workshops are appended here so they can never disagree
 	_workers.push_back(p_worker);
-	// The back reference, this is what makes Worker::work() know where to go.
-	// Both lists are appended here, in the same breath, so they can never disagree.
-	p_worker->_workshops.push_back(this);		// private on Worker, Workshop is a friend
+	p_worker->_workshops.push_back(this);		// private, Workshop is a friend
 
 	std::cout << "[Workshop] enrol  " << p_worker->getLabel() << " joins \"" << _name
 				<< "\", " << getNbWorkers() << " worker(s) inside" << std::endl;
@@ -141,14 +125,14 @@ bool	Workshop::enrolWorker(Worker* p_worker)
 }
 
 
-/* ASSOCIATION, a worker signs out, on his own or because the workshop dropped him
- * Public on purpose: leaving is a legitimate move for both sides.
+/* A worker signs out (only modifies worker part)
+ * - Public on purpose since leaving is a legitimate move
  */
 bool	Workshop::releaseWorker(Worker* p_worker)
 {
 	size_t	index;
 
-	// not inside -> nothing to do, releasing an absent worker leaves the state it was in
+	// not inside -> refuses the does nothing
 	if (!_findWorker(p_worker, index))
 	{
 		std::cout << "[Workshop] release " << p_worker->getLabel() << " was not inside \"" << _name << "\", nothing to do" << std::endl;
@@ -156,7 +140,7 @@ bool	Workshop::releaseWorker(Worker* p_worker)
 	}
 
 	_workers.erase(_workers.begin() + index);
-	p_worker->_forgetWorkshop(this);			// private on Worker, so a back reference is never left behind
+	p_worker->_forgetWorkshop(this);			// private method on Worker that removes back reference
 
 	std::cout << "[Workshop] release " << p_worker->getLabel() << " leaves \"" << _name
 				<< "\", " << getNbWorkers() << " worker(s) left" << std::endl;
@@ -164,47 +148,38 @@ bool	Workshop::releaseWorker(Worker* p_worker)
 }
 
 
-/* BONUS 3, called by a worker every time his toolbox changes
- *
- * The edits are done DIRECTLY on both vectors instead of going through
- * releaseWorker(): the worker is halfway through Worker::_checkWorkshops() and is
- * iterating his own _workshops vector right now, so the removal has to be the
- * surgical one. releaseWorker() would do exactly the same two erasures, and it
- * would erase the element the caller is standing on.
+/* BONUS: called by a worker every time his toolbox changes
+ * The edits are done DIRECTLY on both vectors, releaseWorker() does too
  */
 void	Workshop::_checkWorker(Worker& p_worker)
 {
 	size_t	index;
 
-	// not registered here -> there is nothing to decide
+	// not registered -> does nothing
 	if (!_findWorker(&p_worker, index))
 		return;
 
-	// still carries what we asked for -> stays
+	// still carries tool -> stays (does nothing)
 	if (_hasRequiredTool(p_worker))
 		return;
 
-	// the tool is gone -> he leaves on his own, nobody had to ask
+	// tool is gone -> leaves on its own
 	_workers.erase(_workers.begin() + index);
 	p_worker._forgetWorkshop(this);
 
-	// ! Note: no pronoun in that message, the trace labels the workers by their
-	// ! position and never says whether they are he or she
 	std::cout << "[Workshop] check  " << p_worker.getLabel() << " no longer has a " << _requiredTool
 				<< ", released from \"" << _name << "\"" << std::endl;
 }
 
 
-/* "launching the day for every worker registered inside it"
+/* "launchs" day for every worker registered 
  * An empty workshop is not an error, a day with nobody in it is simply a day
- * where nothing happens.
  */
 void	Workshop::executeWorkDay(void)
 {
 	std::cout << "[Workshop] day    \"" << _name << "\" opens its doors for " << getNbWorkers() << " worker(s)" << std::endl;
 
-	// Index based and not an iterator: work() reaches back into the workshops,
-	// and an index survives a change of size where an iterator would not
+	// Index safer than iterator: work() because index always survives a change of size
 	for (size_t i = 0; i < _workers.size(); i++)
 		_workers[i]->work();
 

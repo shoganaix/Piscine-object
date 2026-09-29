@@ -3,59 +3,47 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+        */
+/*   By: root <root@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/28 22:26:21 by msoriano          #+#    #+#             */
-/*   Updated: 2026/09/28 22:26:21 by msoriano         ###   ########.fr       */
+/*   Updated: 2026/09/29 17:42:20 by root             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Worker.hpp"
-#include "Hammer.hpp"		// only needed here, so work() can reach for a hammer by type
-#include "Workshop.hpp"	// a worker talks to the workshops it belongs to
+#include "Hammer.hpp"
+#include "Workshop.hpp"
 
 # include <iostream>		// std::cout, std::endl
 # include <sstream>			// std::ostringstream, to build the label
-# include <stdexcept>		// std::invalid_argument, used for error handling
+# include <stdexcept>		// std::invalid_argument
 
 
-// COMPOSITION in action: the two members are built FIRST, then this body runs
-Worker::Worker(const Position& p_coordonnee, const Statistic& p_stat)
-	:_coordonnee(p_coordonnee), _stat(p_stat), _tools(), _workshops()
+// Members are built first
+Worker::Worker(const Position& p_coordonnee, const Statistic& p_stat):_coordonnee(p_coordonnee), _stat(p_stat), _tools(), _workshops()
 {
 	std::cout << "[Worker  ] ctor   " << _label() << " is born, level " << _stat.level << ", " << _stat.exp << " exp" << std::endl;
 }
 
-/* ! Note: the copy constructor and the copy assignment are DECLARED in the header
-* and deliberately NOT defined here.
-* Declaring them without a body is the usual way to forbid an operation: the code
-* still compiles, and the mistake only shows up as a link error naming the exact
-* function that was wrongly used, which is far easier to diagnose than a silently
-* wrong deep copy of a worker holding tools and workshop memberships.
-*/
-// Worker::Worker(const Worker& p_other) ;
-// Worker&	Worker::operator=(const Worker& p_other) ;
+// ! Note: the copy constructor and the copy assignment are DECLARED BUT NOT defined 
 
-
-// Const position getter, by reference so the caller cannot detach it
 const Position&	Worker::getCoordonnee(void) const
 {
 	return (_coordonnee);
 }
 
-// Const statistic getter, by reference, same reason
 const Statistic&	Worker::getStat(void) const
 {
 	return (_stat);
 }
 
-// The label that keeps the workers apart in the trace
+// label keeps workers apart in the trace
 std::string	Worker::getLabel(void) const
 {
 	return (_label());
 }
 
-// A worker is labelled by the place he stands, so no extra member is needed for it
+// A worker is labelled by the place he stands
 std::string	Worker::_label(void) const
 {
 	std::ostringstream	oss;
@@ -103,8 +91,6 @@ Worker::~Worker()
 	}
 }
 
-
-// Number of tools CONST getter
 size_t	Worker::getNbTools(void) const
 {
 	return (_tools.size());
@@ -116,13 +102,12 @@ bool	Worker::hasTool(const std::string& p_toolName) const
 	for (size_t i = 0; i < _tools.size(); i++)
 	{
 		if (_tools[i]->getToolName() == p_toolName)
-			return (true);		// found it
+			return (true);		// found
 	}
-	return (false);				// walked the whole toolbox
+	return (false);				// not found
 }
 
 
-// Is this worker inside that workshop
 bool	Worker::isRegisteredTo(const Workshop* p_workshop) const
 {
 	for (size_t i = 0; i < _workshops.size(); i++)
@@ -133,81 +118,63 @@ bool	Worker::isRegisteredTo(const Workshop* p_workshop) const
 	return (false);
 }
 
-// Number of workshops this worker belongs to, CONST getter
 size_t	Worker::getNbWorkshops(void) const
 {
 	return (_workshops.size());
 }
 
-
-/* ------------------------------- AGGREGATION ------------------------------- */
-
-/* The worker BORROWS a tool
- * - a null tool is a programming mistake, not a runtime condition -> throws
- * - handing over the tool he already holds is a no-op
- * - handing it to somebody else TAKES IT AWAY from the previous holder
- */
 void	Worker::giveTool(Tool* p_tool)
 {
 	// null pointer -> throws
 	if (p_tool == 0)
 		throw (std::invalid_argument("Worker: cannot be given a null tool"));
 
-	// he already has it -> nothing to do, and above all do not push it twice
+	// he already has it -> does nothing
 	if (p_tool->getHolder() == this)
 	{
 		std::cout << "[Worker  ] give   " << _label() << " already holds the " << p_tool->getToolName() << std::endl;
 		return;
 	}
 
-	/* ---- "giving it to another worker removes it from the first" ----
-	 * The tool knows who is holding it, so the hand over is resolved without any
-	 * global registry of workers, which would have been the obvious but ugly
-	 * alternative. Asking the previous holder to take it back is the ONLY thing
-	 * that touches the previous toolbox, and takeTool() already erases the back
-	 * reference, so both sides stay consistent.
+	/* ---- "Giving it to another worker removes it from the first" ----
+	 * The tool knows who is holding it! Asking the previous holder to take it back is the ONLY thing
+	 * that touches the previous toolbox and takeTool() erases the reference
 	 */
 	Worker*	p_previous = p_tool->getHolder();
 	if (p_previous)
 	{
 		std::cout << "[Worker  ] give   the " << p_tool->getToolName() << " is taken away from " << p_previous->_label() << std::endl;
-		p_previous->takeTool(p_tool);		// inside it, the victim is re-checked by his workshops
+		p_previous->takeTool(p_tool);
 	}
 
 	_tools.push_back(p_tool);
-	p_tool->_setHolder(this);				// private on Tool, Worker is a friend
+	p_tool->_setHolder(this);
 	std::cout << "[Worker  ] give   " << _label() << " holds " << getNbTools() << " tool(s)" << std::endl;
 
-	_checkWorkshops();		// gaining a tool may also change what a workshop accepts
+	_checkWorkshops();		// gaining a tool may change workshops
 }
 
 
-// The worker gives a tool back, returns false if he was not holding it
+// The worker gives a tool back, returns false if not holding it
 bool	Worker::takeTool(Tool* p_tool)
 {
 	for (size_t i = 0; i < _tools.size(); i++)
 	{
 		if (_tools[i] != p_tool)
-			continue;			// not the one
+			continue;			// not the tool
 		_tools.erase(_tools.begin() + i);
-		p_tool->_setHolder(0);	// the tool is back on the shelf, nobody holds it any more
+		p_tool->_setHolder(0);	// tool on shelf
 		std::cout << "[Worker  ] take   " << _label() << " put the " << p_tool->getToolName()
 					<< " back, " << getNbTools() << " tool(s) left" << std::endl;
-		_checkWorkshops();		// BONUS 3, losing a tool may cost him a workshop
+		_checkWorkshops();		// BONUS:losing a tool may change workshops
 		return (true);
 	}
 	std::cout << "[Worker  ] take   " << _label() << " was not holding that tool, refused" << std::endl;
-	return (false);				// not an error, the state was simply already the requested one
+	return (false);
 }
 
-
-/* ---------------------------- BONUS 3 ---------------------------- */
-
-/* Every workshop this worker belongs to re-checks him after a toolbox change
- *
- * BACKWARD iteration is mandatory here, for the same reason as in the destructor:
- * a workshop that decides to release him calls _forgetWorkshop(), which erases
- * from the very vector being walked.
+/* Bonus: Every workshop re-checks  after a toolbox change
+ * !Note: BACKWARD iteration is mandatory here! (since you are checking workers and pos may change)
  */
 void	Worker::_checkWorkshops(void)
 {
@@ -215,7 +182,7 @@ void	Worker::_checkWorkshops(void)
 		_workshops[i - 1]->_checkWorker(*this);
 }
 
-// Private, only Workshop may call it, erases this worker from the workshop back reference
+// Private. Erases this worker from the workshop reference so we just want worker class touching it
 void	Worker::_forgetWorkshop(Workshop* p_workshop)
 {
 	for (std::vector<Workshop*>::iterator it = _workshops.begin(); it != _workshops.end(); ++it)
@@ -228,36 +195,27 @@ void	Worker::_forgetWorkshop(Workshop* p_workshop)
 	}
 }
 
-
-/* ------------------------------ ASSOCIATION ------------------------------ */
-
 /* "execute work IF he is registered to a workshop"
- * - no workshop -> refuses, returns false
  * - otherwise he does a job for each of them
  */
 bool	Worker::work(void)
 {
-	// registered nowhere -> nothing to do
+	// registered nowhere -> refuses then does nothing
 	if (_workshops.empty())
 	{
 		std::cout << "[Worker  ] work   " << _label() << " is signed up nowhere, he stays home" << std::endl;
 		return (false);
 	}
-
+	// otherwise, does a job for each of them
 	std::cout << "[Worker  ] work   " << _label() << " is heading to " << getNbWorkshops() << " workshop(s)" << std::endl;
 
-	/* The BONUS template in real use: ask the toolbox for a hammer BY TYPE.
-	 * getTool<Hammer>() returns 0 when he owns none, which is exactly why the
-	 * result is tested and not dereferenced straight away.
-	 *
-	 * The call below is a virtual dispatch through a Tool* the worker never
-	 * declared, which is the whole point of the inheritance done in Tool.
+	/* BONUS: Ask the toolbox for a hammer BY TYPE.
+	 * Note to remember: getTool<Hammer>() returns 0 when he owns none.
 	 */
 	Hammer*	p_hammer = getTool<Hammer>();
 	if (p_hammer == 0)
 		std::cout << "[Worker  ] work   " << _label() << " has no hammer, he works with his bare hands" << std::endl;
 	else
 		p_hammer->use();
-
 	return (true);
 }

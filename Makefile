@@ -6,12 +6,12 @@
 #    By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/09/28 17:40:49 by root              #+#    #+#              #
-#    Updated: 2026/09/28 22:26:21 by msoriano         ###   ########.fr        #
+#    Updated: 2026/10/13 13:11:09 by msoriano         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 # The modules of the piscine, each one owns the Makefiles of its own exercises
-MODULES := module00 module01
+MODULES := module00 module01 module02
 
 # Root Makefile doesnt build anything instead forwards each goal to the module
 # Makefiles, which in turn forward it to their exercises. The chain is:

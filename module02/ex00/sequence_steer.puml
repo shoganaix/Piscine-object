@@ -1,0 +1,36 @@
+@startuml sequence_steer
+' Bonus 4 : steering scenario
+skinparam shadowing false
+skinparam dpi 150
+title Steering - SteerWheel -> DAE -> Direction -> Wheels
+
+actor Driver
+participant Cockpit
+participant SteerWheel
+participant DAE
+participant Direction
+participant Wheel
+
+Driver -> Cockpit : turnSteering(angle)
+activate Cockpit
+Cockpit -> SteerWheel : turn(angle)
+activate SteerWheel
+SteerWheel -> DAE : use(angle)
+activate DAE
+DAE -> Direction : turn(angle)
+activate Direction
+Direction -> Wheel : turn(angle)
+activate Wheel
+Wheel --> Direction : heading updated
+deactivate Wheel
+deactivate Direction
+deactivate DAE
+deactivate SteerWheel
+deactivate Cockpit
+
+note over SteerWheel, DAE
+  Electronics owns the DAE object;
+  the Cockpit only reaches it
+  through the SteerWheel pointer.
+end note
+@enduml

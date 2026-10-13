@@ -6,7 +6,7 @@
 /*   By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/28 22:26:21 by msoriano          #+#    #+#             */
-/*   Updated: 2026/09/28 22:26:21 by msoriano         ###   ########.fr       */
+/*   Updated: 2026/09/29 19:45:07 by msoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,18 +18,18 @@
 #include "Worker.hpp"
 #include "Workshop.hpp"
 
-# include <exception>		// std::exception, the outermost catch
+# include <exception>		// std::exception
 # include <iostream>		// std::cout, std::cerr, std::endl
 # include <stdexcept>		// std::invalid_argument, documented in the refused operations below
 
 
 /* Everything that can be refused is refused by an exception, and every refusal is
- * caught here, so the demonstration always runs to the end.
+ * caught here, so the demonstration always runs to the end
  *
- * The trace printed below is the deliverable the evaluation reads: the subject asks
- * for an output in pretty much every function, method, constructor, operator and
+ * The trace printed below is the deliverable the evaluation reads: 
+ * - the subject asks for an output in pretty much every function, method, constructor, operator and
  * destructor, and asks that those outputs show in which order the code runs.
- * Each block therefore maps to one section of the subject, and the block titles are
+ * - Each block therefore maps to one section of the subject, and the block titles are
  * the section numbers, so any line of the output can be traced back to the code.
  *
  * Every worker and every workshop below lives in its own block, so the destructors
@@ -37,7 +37,7 @@
  */
 int	main()
 {
-	try		// every operation below may throw, so guard the whole thing
+	try
 	{
 
 /* ==========================================================================================
@@ -51,13 +51,13 @@ int	main()
  * ! Note: every worker below is built from two NAMED locals rather than from temporaries.
  * ! In C++98 the order in which the arguments of a constructor call are evaluated is
  * ! NOT specified, so a temporary would sometimes print before the other one and the
- * ! trace would show the composition backwards from one block to the next.
+ * ! trace would show the composition backwards from one block to the next
  */
 		std::cout << "=== IV.1 Composition ===" << std::endl;
 		{
 			Position	alicePosition(1, 2, 3);
 			Statistic	aliceStat(3, 250);
-			// Both members are built by the worker constructor itself, that is composition:
+			// Both members are built by the worker constructor itself, that is composition
 			// he does not receive them, he builds them, and they cannot live without him
 			Worker		alice(alicePosition, aliceStat);
 

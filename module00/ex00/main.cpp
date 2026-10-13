@@ -6,7 +6,7 @@
 /*   By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/28 18:51:49 by msoriano          #+#    #+#             */
-/*   Updated: 2026/09/28 19:03:39 by msoriano         ###   ########.fr       */
+/*   Updated: 2026/10/13 12:32:50 by msoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,8 +98,9 @@ int	main()
 		}
 
 		std::cout << "Bob was not altered : " << bank[1] << std::endl;							// 300, nothing changed
-	}				
-	// ANY exception no handled above									
+	}	
+
+	// ANY exception not handled above									
 	catch (const std::exception& e)
 	{
 		std::cerr << "Unexpected error : " << e.what() << std::endl;

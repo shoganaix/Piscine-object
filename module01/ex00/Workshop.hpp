@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Workshop.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: root <root@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/28 22:26:21 by msoriano          #+#    #+#             */
-/*   Updated: 2026/09/29 18:54:59 by root             ###   ########.fr       */
+/*   Updated: 2026/09/29 19:40:30 by msoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,12 +61,12 @@ class Workshop
 		*   -1. A Workshop holding a Tool* prototype would have to invent a throwaway
 		*     instance of an ABSTRACT class which cannot be bdone
 		*   -2. RTTI (Run-Time Type Information) is already used when they ask for an object
-		*		and ist not necessary;
+		*		and there is no need to use it here
 		*/
 		bool	_hasRequiredTool(const Worker& p_worker) const;
 
 		/* BONUS: A worker must be able to ASK whether it still belongs here, but must not be able to diretcly tell the workshop to drop him
-		* Worker::_checkWorkshops() reaches this only to re-evaluate a membership it already holds
+		* Worker::_checkWorkshops() uses this only to re-evaluate a membership taht worker already holds
 		*/
 		void	_checkWorker(Worker& p_worker);
 

@@ -6,6 +6,7 @@ Implementation of the 42 **Piscine Object** subjects, in C++98.
 |---|---|---|---|
 | 00 | Encapsulation | [`module00/po_module00_subject.pdf`](module00/po_module00_subject.pdf) | `ex00`, `ex01` |
 | 01 | Relationship | [`module01/po_module01_subject.pdf`](module01/po_module01_subject.pdf) | `ex00` |
+| 02 | UML | [`module02/en.subject.pdf`](module02/en.subject.pdf) | `ex00` |
 
 Both are built with `-Wall -Wextra -Werror -std=c++98`, use no library outside
 the standard one, and never allocate raw memory.
@@ -32,6 +33,12 @@ make fclean                # clean + removes the executables
 ./module01/ex00/ex00       # runs the relationships
 ```
 
+Module 02 has no binary: `make -C module02/ex00` regenerates the PNGs from
+the committed `.puml` sources when PlantUML is installed (`plantuml` on PATH
+or `PLANTUML_JAR` pointing at `plantuml.jar`), and otherwise just checks the
+committed PNGs are present. `clean`/`fclean` never delete the PNGs, they are
+the deliverables.
+
 > **Note about `module00/ex01`:** it reads `points.txt` for the file-loading
 > bonus, so it must be launched from inside `ex01/`, or the file will not be
 > found. A missing file is reported as a clean error, not a crash.
@@ -41,8 +48,6 @@ make fclean                # clean + removes the executables
 ```
 .
 ├── Makefile                  # Root, forwards every goal to the module Makefiles
-├── module00/Makefile         # Forwards every goal to its own exercises
-├── module01/Makefile         # Same, for module 01
 ├── README.md                 # This file
 ├── .gitignore                # Keeps the .o files and the executables out of git
 │
@@ -75,6 +80,17 @@ make fclean                # clean + removes the executables
         ├── Hammer.hpp/.cpp       # IV.3 — a second Tool, so the base is justified
         ├── Worker.hpp/.cpp       # IV.1 composition + IV.2 aggregation + IV.4 association
         └── Workshop.hpp/.cpp     # IV.4 association + the two tool related bonuses
+│
+└── module02
+    ├── en.subject.pdf            # The subject
+    ├── Makefile                  # Forwards every goal to its own exercises
+    └── ex00/                     # The only exercise, a UML class diagram
+        ├── Makefile              # Regenerates the PNGs when PlantUML exists
+        ├── subject.puml          # Class diagram source (mandatory + bonuses 1-3)
+        ├── subject.png           # The deliverable, rendered from subject.puml
+        ├── sequence_accel.puml/.png  # Bonus 4 — acceleration scenario
+        ├── sequence_brake.puml/.png  # Bonus 4 — braking scenario
+        └── sequence_steer.puml/.png  # Bonus 4 — steering scenario
 ```
 
 ---
@@ -582,3 +598,174 @@ requested state is already the current one, so it returns `false` and prints a l
 | Exception | Thrown when |
 |---|---|
 | `std::invalid_argument` | A negative coordinate, level or exp, an empty required tool name, a null tool, a null worker |
+
+---
+
+# Module 02: UML
+
+One exercise, `ex00`, with no code: a class diagram of a car, drawn in PlantUML
+([`module02/ex00/subject.puml`](module02/ex00/subject.puml), rendered to
+[`module02/ex00/subject.png`](module02/ex00/subject.png)). All four bonuses are
+done, folded into the same deliverable plus three sequence diagrams.
+
+## M02.1 What each shape in the PNGs means
+
+### Class diagram (`subject.png`)
+
+| Shape | Meaning | Example in the diagram |
+|---|---|---|
+| Rectangle with green `C` | Concrete class | `Motor`, `Wheel`, … |
+| Rectangle with blue `A` | Abstract class, cannot be instantiated | `LinkablePart` |
+| Top compartment | Class name (`"Singleton<T>"` = template class) | every box |
+| Middle compartment | Attributes, `-` = private | `-chamber : ExplosionChamber*` |
+| Bottom compartment | Methods, `+` = public | `+execute(p_pression : float) : void` |
+| *Italic* + `{abstract}` | Must be overridden by the children | `LinkablePart.execute()` |
+| `.. template <T> ..` | Template parameter, shown as a separator note | inside `Singleton` |
+| Hollow triangle arrowhead | Inheritance / realisation, points at the parent | `Injector` \rightarrowtriangle  `LinkablePart` |
+| Filled diamond | **Composition**: the diamond owner stores the other **by value** and destroys it | `Motor` \rightarrowblackdiamond  `Injector` |
+| Hollow diamond | **Aggregation**: the diamond owner only **borrows** a pointer, never deletes it | `Transmission` \rightarrowwhitediamond  `Wheel` |
+| Plain open arrow | Use-dependency (`<<use>>` = call through an interface) | `Pedal` \rightarrow  `LinkablePart` |
+| Label mid-link | Multiplicity or role | `1`, `2`, `4`, `1..*`, `0..1`, `driven 2`, `target` |
+| Tabbed folder around classes | Package = one functional block, colour-coded | `Powertrain`, `Braking`, … |
+| Yellow sticky note | Design rationale, not code | the notes on `LinkablePart` and `Car` |
+
+### Sequence diagrams (`sequence_*.png`)
+
+| Shape | Meaning | Example in the diagrams |
+|---|---|---|
+| Stick figure | Actor: someone outside the system | `Driver` |
+| Box on top | Participant: one object of the scenario | `Pedal (target = Injector)` |
+| Dashed vertical line | Lifeline: time flows downwards | every participant |
+| Thin white bar on a lifeline | Activation: that method is running right now (nested bars = nested calls) | `use()` containing `execute()` |
+| Solid arrow | Synchronous call, labelled with the method | `execute(pression)` |
+| Dashed arrow back | Return / effect coming back to the caller | `rolling` |
+| `loop` frame | The enclosed exchange repeats once per element | one `execute()` per `Brake` |
+| Yellow sticky note | Which wiring was chosen before the scenario starts | `setTarget()` selected the `Injector` |
+
+## M02.2 How the `.puml` files are written
+
+PlantUML turns plain text into the PNGs (`plantuml -tpng file.puml` writes
+`file.png` beside it). The `.puml` sources stay in the repo so anyone can
+re-render or diff them. Writing order, step by step:
+
+1. **Inventory first, drawing later.** One `class` block per noun of the
+   subject, attributes and methods copied verbatim, before drawing a single
+   line — 19 blocks (`LinkablePart`, `Wheel`, `Gear`, `GearLever`,
+   `Transmission`, `Crankshaft`, `ExplosionChamber`, `Injector`, `Motor`,
+   `Pedal`, `Direction`, `DAE`, `SteerWheel`, `Brake`, `BrakeController`,
+   `Cockpit`, `Electronics`, `Car`) plus the `Singleton<T>` template:
+   ```plantuml
+   class Brake {
+     - wheel : Wheel*
+     + execute(p_force : float) : void
+     + attackWheel(p_wheel : Wheel*) : void
+   }
+   abstract class LinkablePart {
+     + {abstract} execute(p_pression : float) : void
+   }
+   ```
+2. **Inheritance first.** Parents live in an `Abstractions` package declared at
+   the top, then `<|--` links point up at them by construction:
+   ```plantuml
+   LinkablePart <|-- Injector
+   LinkablePart <|-- BrakeController
+   Singleton <|-- GearLever : binds T = GearLever
+   ```
+3. **Composition as vertical spines.** `Whole *-up-- Part` declares the relation
+   *and* forces the layout in one token: the `*` puts the filled diamond on the
+   whole, `up` draws the line towards the part, so the whole always settles
+   below its parts:
+   ```plantuml
+   Motor *-up-- Injector : "1"
+   Car   *-up-- Motor    : "1"
+   ```
+   (Rule of thumb, verified by rendering: whichever end the `*`/`o` touches
+   gets the diamond — `Car *-- Motor` and `Motor --* Car` draw the same
+   diamond on `Car`.)
+4. **Aggregation for every raw pointer.** Same idea downwards: the `o` puts the
+   hollow diamond on the borrower, the borrowed class hangs below:
+   ```plantuml
+   Transmission o-down-- Wheel : "driven 2"
+   ```
+5. **Packages group, never constrain.** The seven `package "Name" #colour { … }`
+   blocks only colour and cluster; all positioning comes from steps 2–4, so
+   moving a class between packages never breaks the layout.
+6. **Multiplicities and notes last**: one quoted label per link (`"1"`,
+   `"1..*"`, `"4"`, `"0..1"`, …) plus two rationale notes.
+7. **Render, look, fix.** Render, open the PNG, fix crossings. Two lessons kept
+   as rules: `skinparam linetype ortho` crashes the graphviz solver on this
+   diagram (plain routing instead), and owned members get no second
+   association arrow — the composition already says "drives".
+
+Sequence files use a smaller vocabulary — `actor`, `participant`,
+`activate`/`deactivate`, call arrows `->`, return arrows `-->`, one
+`loop … end` for the fan-out over the brakes:
+
+```plantuml
+actor Driver
+participant Cockpit
+participant Pedal as "Pedal\n(target = Injector)"
+Driver -> Cockpit : pressPedal(pression)
+activate Cockpit
+Cockpit -> Pedal : use(pression)
+activate Pedal
+...
+deactivate Pedal
+deactivate Cockpit
+```
+
+## M02.3 The class diagram
+
+![Car composition](module02/ex00/subject.png)
+
+* `LinkablePart` is abstract (`{abstract} execute()`), realised by `Injector`
+  (the accelerator) and `BrakeController` (the brake pedal). `GearLever`
+  inherits `Singleton<GearLever>`, the template binding shown on the arrow.
+* `Motor` composes exactly one `Injector`, `ExplosionChamber` and `Crankshaft`;
+  `Cockpit` composes `Pedal` + `SteerWheel` + `GearLever`; `Electronics` composes
+  the `DAE`; `Car` composes one of each subsystem and exposes no behaviour.
+* `Pedal` holds a `LinkablePart*` set by `setTarget()`: one pedal drives either
+  the `Injector` or the `BrakeController` through the same interface.
+
+## M02.4 The four bonuses
+
+### Bonus 1 — no ascending links
+
+The wholes sit **below** their parts (`Car` at the very bottom), so every
+composition and aggregation link descends. The only ascending edges are the
+three generalisation arrows, which UML mandates to point at the parent, plus
+one `Pedal -> LinkablePart` use-dependency, justified by DIP (depend on the
+abstraction, never on the concrete pedal target).
+
+### Bonus 2 — classes with visibility
+
+Every `struct` became a `class`: all attributes are `-private`, all methods
+`+public`. The wiring pointers (`chamber`, `transmission`, `target`, …) are
+private data driven through public methods.
+
+### Bonus 3 — blocks and multiplicities
+
+Five coloured packages group the functional blocks (Powertrain, Transmission &
+Wheels, Braking, Steering, Gears, Cockpit & Car), and every link carries a
+multiplicity (`GearLever 1..* Gear`, `BrakeController 4 Brake`,
+`Motor 0..1 Transmission`, …).
+
+### Bonus 4 — sequence diagrams
+
+One per scenario, all three rendered next to the class diagram:
+
+* [`sequence_accel.png`](module02/ex00/sequence_accel.png): `Cockpit ->
+  Pedal -> Injector -> ExplosionChamber -> Crankshaft -> Transmission -> Wheel`.
+* [`sequence_brake.png`](module02/ex00/sequence_brake.png): same `Pedal`
+  interface, but the target is the `BrakeController`, fanning out over each
+  `Brake` — the polymorphism payoff, visible in one picture.
+* [`sequence_steer.png`](module02/ex00/sequence_steer.png): `SteerWheel -> DAE
+  -> Direction -> Wheel`, noting `Electronics` owns the `DAE`.
+
+## M02.5 Regenerating the PNGs
+
+```bash
+make -C module02/ex00            # no-op check without PlantUML
+plantuml -tpng module02/ex00/subject.puml   # explicit render
+PLANTUML_JAR=/tmp/plantuml.jar make -C module02/ex00
+```

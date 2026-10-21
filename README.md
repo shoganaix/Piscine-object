@@ -467,103 +467,15 @@ done, folded into the same deliverable plus three sequence diagrams.
 | Tabbed folder around classes | Package = one functional block, colour-coded | `Powertrain`, `Braking`, … |
 | Yellow sticky note | Design rationale, not code | the notes on `LinkablePart` and `Car` |
 
-### Sequence diagrams (`sequence_*.png`)
-
-| Shape | Meaning | Example in the diagrams |
-|---|---|---|
-| Stick figure | Actor: someone outside the system | `Driver` |
-| Box on top | Participant: one object of the scenario | `Pedal (target = Injector)` |
-| Dashed vertical line | Lifeline: time flows downwards | every participant |
-| Thin white bar on a lifeline | Activation: that method is running right now (nested bars = nested calls) | `use()` containing `execute()` |
-| Solid arrow | Synchronous call, labelled with the method | `execute(pression)` |
-| Dashed arrow back | Return / effect coming back to the caller | `rolling` |
-| `loop` frame | The enclosed exchange repeats once per element | one `execute()` per `Brake` |
-| Yellow sticky note | Which wiring was chosen before the scenario starts | `setTarget()` selected the `Injector` |
-
 ## How the `.puml` files are written
 
 PlantUML turns plain text into the PNGs (`plantuml -tpng file.puml` writes
 `file.png` beside it). The `.puml` sources stay in the repo so anyone can
 re-render or diff them. Writing order, step by step:
 
-1. **Inventory first, drawing later.** One `class` block per noun of the
-   subject, attributes and methods copied verbatim, before drawing a single
-   line — 19 blocks (`LinkablePart`, `Wheel`, `Gear`, `GearLever`,
-   `Transmission`, `Crankshaft`, `ExplosionChamber`, `Injector`, `Motor`,
-   `Pedal`, `Direction`, `DAE`, `SteerWheel`, `Brake`, `BrakeController`,
-   `Cockpit`, `Electronics`, `Car`) plus the `Singleton<T>` template:
-   ```plantuml
-   class Brake {
-     - wheel : Wheel*
-     + execute(p_force : float) : void
-     + attackWheel(p_wheel : Wheel*) : void
-   }
-   abstract class LinkablePart {
-     + {abstract} execute(p_pression : float) : void
-   }
-   ```
-2. **Inheritance first.** Parents live in an `Abstractions` package declared at
-   the top, then `<|--` links point up at them by construction:
-   ```plantuml
-   LinkablePart <|-- Injector
-   LinkablePart <|-- BrakeController
-   Singleton <|-- GearLever : binds T = GearLever
-   ```
-3. **Composition as vertical spines.** `Whole *-up-- Part` declares the relation
-   *and* forces the layout in one token: the `*` puts the filled diamond on the
-   whole, `up` draws the line towards the part, so the whole always settles
-   below its parts:
-   ```plantuml
-   Motor *-up-- Injector : "1"
-   Car   *-up-- Motor    : "1"
-   ```
-   (Rule of thumb, verified by rendering: whichever end the `*`/`o` touches
-   gets the diamond — `Car *-- Motor` and `Motor --* Car` draw the same
-   diamond on `Car`.)
-4. **Aggregation for every raw pointer.** Same idea downwards: the `o` puts the
-   hollow diamond on the borrower, the borrowed class hangs below:
-   ```plantuml
-   Transmission o-down-- Wheel : "driven 2"
-   ```
-5. **Packages group, never constrain.** The seven `package "Name" #colour { … }`
-   blocks only colour and cluster; all positioning comes from steps 2–4, so
-   moving a class between packages never breaks the layout.
-6. **Multiplicities and notes last**: one quoted label per link (`"1"`,
-   `"1..*"`, `"4"`, `"0..1"`, …) plus two rationale notes.
-7. **Render, look, fix.** Render, open the PNG, fix crossings. Two lessons kept
-   as rules: `skinparam linetype ortho` crashes the graphviz solver on this
-   diagram (plain routing instead), and owned members get no second
-   association arrow — the composition already says "drives".
-
-Sequence files use a smaller vocabulary — `actor`, `participant`,
-`activate`/`deactivate`, call arrows `->`, return arrows `-->`, one
-`loop … end` for the fan-out over the brakes:
-
-```plantuml
-actor Driver
-participant Cockpit
-participant Pedal as "Pedal\n(target = Injector)"
-Driver -> Cockpit : pressPedal(pression)
-activate Cockpit
-Cockpit -> Pedal : use(pression)
-activate Pedal
-...
-deactivate Pedal
-deactivate Cockpit
-```
-
 ## The class diagram
 
 ![Car composition](module02/ex00/subject.png)
-
-* `LinkablePart` is abstract (`{abstract} execute()`), realised by `Injector`
-  (the accelerator) and `BrakeController` (the brake pedal). `GearLever`
-  inherits `Singleton<GearLever>`, the template binding shown on the arrow.
-* `Motor` composes exactly one `Injector`, `ExplosionChamber` and `Crankshaft`;
-  `Cockpit` composes `Pedal` + `SteerWheel` + `GearLever`; `Electronics` composes
-  the `DAE`; `Car` composes one of each subsystem and exposes no behaviour.
-* `Pedal` holds a `LinkablePart*` set by `setTarget()`: one pedal drives either
-  the `Injector` or the `BrakeController` through the same interface.
 
 ## Regenerating the PNGs
 

@@ -47,55 +47,47 @@ the deliverables.
 
 # Module 00: Encapsulation
 
-`Account` and `Bank` come from the subject's `DivideAndRule.cpp`, where every
-attribute was public. The exercise is to seal both classes so that no illogical
-action is possible.
+An introduction to Object-Oriented Programming in C++, focused on encapsulation, access control, class responsibilities, and data integrity.
 
 ## M00.1 Exercise 00 — the bank
+
+`Account` and `Bank` come from the subject's `DivideAndRule.cpp`, where every
+attribute was public. The exercise is to seal both classes so that no illogical
+action is possible, so basically, **an account's internal state must never be modified directly from outside the bank**
 
 ### What is encapsulation
 Encapsulation is a core principle of Object-Oriented Programming (OOP). It means bundling data (variables) and methods (functions) into a single unit (a class) and restricting direct access to some of the object's components
 
-### What the program does
+### Example Output
 
 ```
 === Creation of the bank ===
 Liquidity : 999
 
 === Account creation ===
-Liquidity : 999
 [0] - [100]
-[1] - [100]
 
-=== Deposit, the bank keeps 5% ===
+=== Deposit 400, the bank keeps 5% ===
 Alice now owns : 480
 Bank liquidity : 1019
-Alice id is still : 0
 
 === Loans ===
-Loan of 200 granted : 1
-Bob now owns : 300
-Loan of 100000 granted : 0
+Loan of 200 granted : 1 (true)
+Alice now owns : 680
+Loan of 100000 granted : 0 (false)
 Liquidity untouched : 819
-
-=== Account deletion ===
-Accounts left : 1
-Bob id after the deletion : 1
-Bob now owns : 300
-Bank informations :
-Liquidity : 819
-[1] - [300]
-
-=== Refused operations ===
-Caught : Bank: unknown account id
-Caught : Bank: amount must be strictly positive
-Caught : Bank: this account id is already taken
-Bob was not altered : 300
 ```
 
-The arithmetic is the proof that the encapsulation works: a deposit of 400 leaves
-the client with `100 + 380 = 480` and gives the bank `999 + 20 = 1019`, because the
-5% commission lives inside `deposit()` and there is no way to reach it from outside.
+The bank applies a 5% commission to every deposit.
+| Operation | Calculation | Result |
+|---|---|---|
+| Commission      | 400 * 0.05 | 20   |
+| Amount credited | 400 - 20   | 380  |
+| Alice's balance | 100 + 380  | 480  |
+| Bank liquidity  | 999 + 20   | 1019 |
+
+The commission is calculated inside deposit(), not by caller. 
+This ensures that external code cannot bypass the commission or modify account balances directly through the public interface.
 
 ### The public surface
 
@@ -137,6 +129,7 @@ class Bank
 > It is declared at the top of [`module00/ex00/Bank.hpp:38`](module00/ex00/Bank.hpp).
 
 ## M00.2 Exercise 01 — the graph
+A small 2D graph system capable of storing points, generating lines, and displaying the result as ASCII art.
 
 `Vector2` is a container for two `float` components. `Graph` holds a size and a list
 of points, and renders them as ASCII art.
@@ -175,7 +168,7 @@ private:
 };
 ```
 
-## M00.3 Error handling
+## Error handling
 
 The subject requires that the program never crashes, even when it runs out of memory.
 Three things were done to make that true:
@@ -227,59 +220,33 @@ back to a requirement.
 
 ### IV.1 Composition
 
+A `Worker` contains a `Position` and a `Statistic`, both created automatically when the worker is constructed.
 ```
-=== IV.1 Composition ===
-[Position] ctor   a worker stands at (1, 2, 3)
-[Statistic] ctor  born at level 3 with 250 exp
-[Worker  ] ctor   worker(1, 2, 3) is born, level 3, 250 exp
-Alice is worker(1, 2, 3), level 3, 250 exp
-She is handed 0 tool(s) and joined 0 workshop(s): a worker starts with nothing
-[Worker  ] dtor   worker(1, 2, 3) is leaving
+[Worker]: Worker [position](1, 2, 3) is born, [statistic] level 3, 250 exp
 ```
-
-The position and the statistic are built before the worker body runs, in the order
-they are declared, and a worker cannot be constructed without both of them.
 
 ### IV.2 Aggregation
 
+A Worker can hold tools without owning their lifetime.
 ```
-=== IV.2 Aggregation ===
-[Tool    ] ctor   a brand new tool, 0 use so far
-[Shovel  ] ctor   a shovel is leaning against the wall
-[Position] ctor   a worker stands at (4, 5, 6)
-[Statistic] ctor  born at level 1 with 10 exp
-[Worker  ] ctor   worker(4, 5, 6) is born, level 1, 10 exp
-[Worker  ] give   worker(4, 5, 6) holds 1 tool(s)
-[Shovel  ] use    digs a hole, use #1
-[Worker  ] dtor   worker(4, 5, 6) is leaving
-[Worker  ] dtor   worker(4, 5, 6) leaves the shovel behind, it was never his to destroy
-The shovel outlived the worker, uses so far : 1
+Worker(4, 5, 6) holds 1 tool(s)
+Worker uses shovel to dig a hole (uses #1)
+Worker(4, 5, 6) is leaving
+The shovel outlived the worker, (1 uses so far)
 ```
 
 That last line of the destructor is the proof: **nothing is deleted**, the tool
 belongs to `main`, and the worker may vanish while holding one. Handing the same
 shovel to a second worker removes it from the first one:
 
-```
-[Worker  ] give   worker(7, 8, 9) holds 1 tool(s)
-[Worker  ] give   the shovel is taken away from worker(7, 8, 9)
-[Worker  ] take   worker(7, 8, 9) put the shovel back, 0 tool(s) left
-[Worker  ] give   worker(0, 0, 0) holds 1 tool(s)
-```
-
-The tool knows its holder, so the hand-over is resolved without any global registry
-of workers.
-
 ### IV.3 Inheritance
 
+Shovel and Hammer inherit from Tool and implement their own use() behavior.
+
 ```
-[Tool    ] ctor   a brand new tool, 0 use so far
-[Hammer  ] ctor   a hammer is hanging on the board
-[Worker  ] give   worker(5, 5, 5) holds 2 tool(s)
-Erin holds 2 tool(s) at once
-[Hammer  ] use    breaks a rock, use #1
-[Shovel  ] use    digs a hole, use #2
-[Worker  ] take   worker(5, 5, 5) put the hammer back, 1 tool(s) left
+Worker(5, 5, 5) holds 2 tool(s)
+Use hammer to breaka a rock (uses #1)
+Use shovel to dig a hole (uses #2)
 ```
 
 The two `use` lines come from the **same** call on the same `Tool*` array, the loop
@@ -287,23 +254,12 @@ cannot tell the two tools apart, and each one still behaves as itself.
 
 ### IV.4 Association
 
+A Worker can join multiple Workshop objects, and each workshop can contain multiple workers.
+
 ```
-[Workshop] ctor   "forest camp" opens, any worker is welcome
-[Workshop] ctor   "mine" opens, any worker is welcome
-[Worker  ] work   worker(1, 1, 1) is signed up nowhere, he stays home
-Frank works before signing up, work() returns : 0
-[Workshop] enrol  worker(1, 1, 1) joins "forest camp", 1 worker(s) inside
-[Workshop] enrol  worker(1, 1, 1) joins "mine", 1 worker(s) inside
-Frank is now inside 2 workshops at once
-[Workshop] day    "forest camp" opens its doors for 1 worker(s)
-[Worker  ] work   worker(1, 1, 1) is heading to 2 workshop(s)
-[Workshop] day    "forest camp" closes, the work day is over
-[Workshop] day    "mine" opens its doors for 1 worker(s)
-[Workshop] day    "mine" closes, the work day is over
-[Workshop] release worker(1, 1, 1) leaves "forest camp", 0 worker(s) left
-Frank is down to 1 workshop(s)
-[Worker  ] dtor   worker(1, 1, 1) is leaving
-[Workshop] release worker(1, 1, 1) leaves "mine", 0 worker(s) left
+Worker(1, 1, 1) joins "forest camp"
+Worker(1, 1, 1) joins "mine"
+Worker is now inside 2 workshops at once
 ```
 
 One worker is inside two workshops at the same time, `work()` refuses to do
@@ -424,72 +380,53 @@ private:
 
 All three are done. The subject only assesses them if the mandatory part is perfect.
 
-### Bonus 1 — `GetTool<ToolType>()`
+### Bonus 1 — `GetTool<T>()`
 
 Implemented as a template member in [`module01/ex00/Worker.hpp:104`](module01/ex00/Worker.hpp),
-`dynamic_cast` on every tool of the toolbox, first match wins, `0` when there is
-none. Its body **must** live in the header, a template is compiled where it is
-declared:
+`dynamic_cast` on every tool of the toolbox.
+- Returns the first matching tool.
+- Returns `0` if no match is found.
+- Implemented in `Worker.hpp` for template visibility.
+
+### Bonus 2 — Tool Requirements
+
+`Workshop` can require a specific tool before accepting a worker.
 
 ```
-getTool<Shovel>() returned her shovel, getTool<Hammer>() returned nothing
+Worker(2, 2, 2) is turned away
+Give tool to worker(2, 2, 2), now holds 1 tool(s)
+Worker(2, 2, 2) joins "kitchen garden" (1 worker(s) inside)
 ```
 
-### Bonus 2 — a workshop only accepts workers with a given tool
+### Bonus 3 — Automatic Workshop Release
 
-`Workshop` keeps the name of the tool it demands and refuses the others at the door.
-The comparison is done on the **name** and not on a `typeid`, because a workshop
-holding a `Tool*` prototype would have to instantiate an abstract class to compare
-against. RTTI is used only where the caller asked for a type, inside `getTool<T>()`:
-
-```
-[Workshop] ctor   "kitchen garden" opens, only a worker with a shovel may come in
-[Workshop] enrol  worker(2, 2, 2) is turned away, "kitchen garden" only takes workers with a shovel
-[Worker  ] give   worker(2, 2, 2) holds 1 tool(s)
-[Workshop] enrol  worker(2, 2, 2) joins "kitchen garden", 1 worker(s) inside
-[Workshop] enrol  worker(3, 3, 3) is turned away, "kitchen garden" only takes workers with a shovel
-```
-
-### Bonus 3 — a worker who loses his tool is released automatically
-
+When a worker loses a required tool, the workshop automatically removes them.
 Every worker keeps a back reference to the workshops it belongs to, and every change
-to the toolbox asks each of them to re-check the worker. The implementation is in
-[`module01/ex00/Workshop.hpp:100`](module01/ex00/Workshop.hpp) and the erasure of
-both sides happens there, on the vector of the caller, to avoid invalidating the
-iteration:
+to the toolbox asks each of them to re-check the worker. 
+The implementation is in [`module01/ex00/Workshop.hpp:100`](module01/ex00/Workshop.hpp) and the erasure of both sides happens there
 
 ```
-[Worker  ] take   worker(2, 2, 2) put the shovel back, 0 tool(s) left
-[Workshop] check  worker(2, 2, 2) no longer has a shovel, released from "kitchen garden"
-Grace is down to 0 workshop(s), the garden let her go on its own
+Worker(2, 2, 2) puts the shovel back (0 tool(s) left)
+Workshop checks worker(2, 2, 2), they no longer have a shovel, released from "kitchen garden"
+Worker is down to 0 workshop(s), "kitchen garden" let them go on its own
 ```
 
-Nobody calls `releaseWorker()` there, and she still leaves.
+## Design notes
 
-## M01.4 Design notes
+- **Nobody owns a tool.** `main` creates the `Shovel` and the `Hammer` on its own
+stack and the workers only receive pointers
 
-**Nobody owns a tool.** `main` creates the `Shovel` and the `Hammer` on its own
-stack, the workers only receive pointers, and neither the worker destructor nor the
-workshop destructor ever calls `delete`. There is exactly one owner per object and it
-is always the creator.
-
-**The back references are what keep the lists consistent.** `Worker::_workshops` and
+- **The back references are what keep the lists consistent.** `Worker::_workshops` and
 `Workshop::_workers` are two halves of one relationship, and each class edits **its
-own** vector through a private method guarded by `friend`. Neither side gets a public
-setter, and the two lists can never drift apart. That is why the two classes are
-friends of each other.
+own** vector through a private method guarded by `friend`
 
-**Two loops iterate backwards, on purpose.** `Worker::~Worker()` and
-`Worker::_checkWorkshops()` both walk `_workshops` while a `releaseWorker()` or a
-`_forgetWorkshop()` may erase the element the loop is standing on. Going backwards
-makes the erasure safe, a forward iterator would be invalidated.
+- **Two loops iterate backwards, on purpose.** Going backwards
+makes the erasure safe in `releaseWorker()`, a forward iterator in `Worker::_checkWorkshops()` would be invalidated.
 
-**A copy is refused by a link error.** `Worker`, `Tool` and `Workshop` all declare a
-copy constructor and a copy assignment and never define them. Nothing in this exercise
-ever needs a second man with the same coordinates, the same tools and the same
-workshops, so the operation is closed rather than silently done wrong.
+- **A copy is refused by a link error.** `Worker`, `Tool` and `Workshop` all declare a
+copy constructor and a copy assignment and never define them
 
-## M01.5 Error handling
+## Error handling
 
 The same approach as module 00, applied to the new objects:
 
@@ -502,18 +439,8 @@ The same approach as module 00, applied to the new objects:
 3. **Every exception is caught individually**, so the demonstration always runs to
    the end:
 
-```
-=== Refused operations ===
-Caught : Position: coordinates cannot be negative
-Caught : Statistic: level and exp cannot be negative
-Caught : Workshop: the required tool cannot be an empty name
-Caught : Worker: cannot be given a null tool
-[Worker  ] take   worker(9, 9, 9) was not holding that tool, refused
-Caught : Workshop: cannot enrol a null worker
-```
-
-A `takeTool()` for a tool the worker does not hold is **not** an exception: the
-requested state is already the current one, so it returns `false` and prints a line.
+> A `takeTool()` for a tool the worker does not hold is **not** an exception: the
+> requested state is already the current one, so it returns `false` and prints a line.
 
 | Exception | Thrown when |
 |---|---|
@@ -528,7 +455,7 @@ One exercise, `ex00`, with no code: a class diagram of a car, drawn in PlantUML
 [`module02/ex00/subject.png`](module02/ex00/subject.png)). All four bonuses are
 done, folded into the same deliverable plus three sequence diagrams.
 
-## M02.1 What each shape in the PNGs means
+## What each shape in the PNGs means
 
 ### Class diagram (`subject.png`)
 
@@ -562,7 +489,7 @@ done, folded into the same deliverable plus three sequence diagrams.
 | `loop` frame | The enclosed exchange repeats once per element | one `execute()` per `Brake` |
 | Yellow sticky note | Which wiring was chosen before the scenario starts | `setTarget()` selected the `Injector` |
 
-## M02.2 How the `.puml` files are written
+## How the `.puml` files are written
 
 PlantUML turns plain text into the PNGs (`plantuml -tpng file.puml` writes
 `file.png` beside it). The `.puml` sources stay in the repo so anyone can
@@ -634,7 +561,7 @@ deactivate Pedal
 deactivate Cockpit
 ```
 
-## M02.3 The class diagram
+## The class diagram
 
 ![Car composition](module02/ex00/subject.png)
 
@@ -647,42 +574,7 @@ deactivate Cockpit
 * `Pedal` holds a `LinkablePart*` set by `setTarget()`: one pedal drives either
   the `Injector` or the `BrakeController` through the same interface.
 
-## M02.4 The four bonuses
-
-### Bonus 1 — no ascending links
-
-The wholes sit **below** their parts (`Car` at the very bottom), so every
-composition and aggregation link descends. The only ascending edges are the
-three generalisation arrows, which UML mandates to point at the parent, plus
-one `Pedal -> LinkablePart` use-dependency, justified by DIP (depend on the
-abstraction, never on the concrete pedal target).
-
-### Bonus 2 — classes with visibility
-
-Every `struct` became a `class`: all attributes are `-private`, all methods
-`+public`. The wiring pointers (`chamber`, `transmission`, `target`, …) are
-private data driven through public methods.
-
-### Bonus 3 — blocks and multiplicities
-
-Five coloured packages group the functional blocks (Powertrain, Transmission &
-Wheels, Braking, Steering, Gears, Cockpit & Car), and every link carries a
-multiplicity (`GearLever 1..* Gear`, `BrakeController 4 Brake`,
-`Motor 0..1 Transmission`, …).
-
-### Bonus 4 — sequence diagrams
-
-One per scenario, all three rendered next to the class diagram:
-
-* [`sequence_accel.png`](module02/ex00/sequence_accel.png): `Cockpit ->
-  Pedal -> Injector -> ExplosionChamber -> Crankshaft -> Transmission -> Wheel`.
-* [`sequence_brake.png`](module02/ex00/sequence_brake.png): same `Pedal`
-  interface, but the target is the `BrakeController`, fanning out over each
-  `Brake` — the polymorphism payoff, visible in one picture.
-* [`sequence_steer.png`](module02/ex00/sequence_steer.png): `SteerWheel -> DAE
-  -> Direction -> Wheel`, noting `Electronics` owns the `DAE`.
-
-## M02.5 Regenerating the PNGs
+## Regenerating the PNGs
 
 ```bash
 make -C module02/ex00            # no-op check without PlantUML

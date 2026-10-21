@@ -3,18 +3,18 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: msoriano <msoriano@student.42.fr>          +#+  +:+       +#+         #
+#    By: root <root@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/10/13 12:50:00 by msoriano          #+#    #+#              #
-#    Updated: 2026/10/13 13:58:51 by msoriano         ###   ########.fr        #
+#    Updated: 2026/10/21 20:15:52 by root             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 # Module 02 has no C++ to compile: ex00 delivers UML diagrams drawn in
 # PlantUML. The .puml files are the source of truth; the .png files are
 # committed, so the exercise is complete even where PlantUML is missing.
-PUML := subject.puml sequence_accel.puml sequence_brake.puml sequence_steer.puml
-PNGS := $(PUML:.puml=.png)
+NAME := subject.png
+SRC := subject.puml
 
 # `all` regenerates every PNG from its .puml twin
 #   1. @if command -v plantuml >/dev/null 2>&1; then
@@ -33,13 +33,15 @@ PNGS := $(PUML:.puml=.png)
 #      to the shell instead of expanding it as a make variable.
 #   7. fi
 #      Closes if/elif/else
-all:
+all: $(NAME)
+
+$(NAME): $(SRC)
 	@if command -v plantuml >/dev/null 2>&1; then \
-		plantuml -tpng $(PUML); \
+		plantuml -tpng $(SRC); \
 	elif [ -n "$(PLANTUML_JAR)" ] && [ -f "$(PLANTUML_JAR)" ]; then \
-		java -jar "$(PLANTUML_JAR)" -tpng $(PUML); \
+		java -jar "$(PLANTUML_JAR)" -tpng $(SRC); \
 	else \
-		for f in $(PNGS); do \
+		for f in $(NAME); do \
 			[ -f $$f ] || { echo "missing $$f and no PlantUML available"; exit 1; }; \
 		done; \
 		echo "ex00: no PlantUML found, committed PNGs are up to date"; \
@@ -47,10 +49,11 @@ all:
 
 # The PNGs are deliverables, not build artifacts: clean never removes them.
 clean:
-	@echo "ex00: nothing to clean (PNGs are deliverables)"
+	@echo "ex00: nothing to clean"
 
 fclean: clean
 
-re: fclean all
+re:
+	@$(MAKE) -B all
 
 .PHONY: all clean fclean re

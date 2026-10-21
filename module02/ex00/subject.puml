@@ -1,201 +1,188 @@
-@startuml subject
-' ============================================================
-' Module 02 - ex00 : Car composition (mandatory + bonuses 1-3)
-' Source : subject.puml  ->  renders to subject.png (PlantUML)
-' ------------------------------------------------------------
+' Module 02 - ex00 : Car composition
+' subject.puml  ->  renders to subject.png
+' ------------------------------------------------------------------------
 ' Reading key (also in README.md) :
-'   * every entity is a class (bonus: struct -> class)
-'   * -private attribute / +public method (bonus 2)
-'   * A <|-- B      : B inherits/realises A (arrow MUST point
-'                     up, parent on top - the only allowed
-'                     ascending links, bonus 1)
-'   * A *-up-- B    : A COMPOSES B (by value, filled diamond
-'                     on A). The whole is always BELOW its part,
-'                     so the link descends (bonus 1).
-'   * A o-down-- B  : A AGGREGATES B (borrowed pointer, hollow
-'                     diamond on A). Links always descend.
-'   * A -up-> B     : use-dependency. The single one here is
-'                     Pedal -> LinkablePart, justified by DIP
-'                     (depend on the abstraction).
-'   * every link carries a multiplicity (bonus 3)
-'   * coloured packages = functional blocks (bonus 3)
-' ============================================================
-skinparam ranksep 30
-skinparam nodesep 26
-skinparam packageTitleAlignment center
+'   * every entity is a class
+'   * -private / +public 
+'   * A <|-- B      : B inherits/realises A 
+'   * A *-up-- B    : A COMPOSES B
+'   * A o-down-- B  : A AGGREGATES B
+
+@startuml subject
+skinparam ranksep 45
+skinparam nodesep 35
+skinparam linetype ortho
 skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam dpi 150
 
-title Car composition - class diagram (mandatory + bonuses)
+title Module 02 - ex00 : Car composition
 
-' ---------- abstraction layer : always on top ----------
-package "Abstractions" #FFFFFF {
-  abstract class LinkablePart {
-    + {abstract} execute(p_pression : float) : void
-  }
-  class "Singleton<T>" as Singleton {
-    - instance : T*
-    + {static} getInstance() : T&
+' ---------------------------- classes & structures  ------------------------
+
+abstract class LinkablePart {
+    {abstract} execute(p_pression : float) : void
+}
+
+class "Singleton<GearLever>" as SingletonGearLever
+
+class Wheel {
+    executeRotation(p_force : float) : void
+}
+
+class Gear {
+    demultiplier : int
+}
+
+class GearLever {
+    gears : Gear[]
+    level : int
     --
-    .. template <T> ..
-  }
+    change() : void
+    activeGear() : Gear*
 }
 
-' ---------- powertrain ----------
-package "Powertrain" #FFF2CC {
-  class Injector {
-    - chamber : ExplosionChamber*
-    + execute(p_pression : float) : void
-  }
-  class ExplosionChamber {
-    - crankshaft : Crankshaft*
-    + fill(p_volume : float) : void
-  }
-  class Crankshaft {
-    - transmission : Transmission*
-    + receiveForce(p_volume : float) : void
-  }
-  class Motor {
-    - injector : Injector
-    - chamber : ExplosionChamber
-    - crankshaft : Crankshaft
-    + connectToTransmission(p_transmission : Transmission*) : void
-  }
+class Transmission {
+    wheels : vector<Wheel*>
+    --
+    activate(p_force : float) : void
 }
 
-' ---------- wheels / transmission ----------
-package "Transmission & Wheels" #DDEBF7 {
-  class Transmission {
-    - wheels : Wheel*[]
-    + activate(p_force : float) : void
-  }
-  class Wheel {
-    + executeRotation(p_force : float) : void
-  }
+class Crankshaft {
+    transmission : Transmission*
+    --
+    receiveForce(p_volume : float) : void
 }
 
-' ---------- braking ----------
-package "Braking" #E4DFEC {
-  class Brake {
-    - wheel : Wheel*
-    + execute(p_force : float) : void
-    + attackWheel(p_wheel : Wheel*) : void
-  }
-  class BrakeController {
-    - brakes : Brake[]
-    + execute(p_pression : float) : void
-  }
+class ExplosionChamber {
+    crankshaft : Crankshaft*
+    --
+    fill(p_volume : float) : void
 }
 
-' ---------- steering ----------
-package "Steering" #FCE4D6 {
-  class SteerWheel {
-    - dae : DAE*
-    + turn(p_angle : float) : void
-  }
-  class DAE {
-    - direction : Direction*
-    - force : float
-    + use(p_angle : float) : void
-  }
-  class Direction {
-    - wheels : Wheel[]
-    + turn(p_angle : float) : void
-  }
-  class Electronics {
-    - dae : DAE
-  }
+class Injector {
+    chamber : ExplosionChamber*
+    --
+    execute(p_pression : float) : void
 }
 
-' ---------- gears ----------
-package "Gears" #E2EFDA {
-  class Gear {
-    - demultiplier : int
-  }
-  class GearLever {
-    - gears : Gear[]
-    - level : int
-    + change() : void
-    + activeGear() : Gear*
-  }
+class Motor {
+    injector : Injector
+    chamber : ExplosionChamber
+    crankshaft : Crankshaft
+    --
+    connectToTransmission(p_transmission : Transmission*) : void
 }
 
-' ---------- cockpit & car : composition root at the bottom ----------
-package "Cockpit & Car" #D9E1F2 {
-  class Pedal {
-    - target : LinkablePart*
-    + setTarget(p_part : LinkablePart*) : void
-    + use(p_pression : float) : void
-  }
-  class Cockpit {
-    - pedal : Pedal
-    - steerWheel : SteerWheel
-    - gearLever : GearLever
-    + pressPedal(p_pression : float) : void
-    + turnSteering(p_angle : float) : void
-    + shiftGear() : void
-  }
-  class Car {
-    - brakeController : BrakeController
-    - direction : Direction
-    - transmission : Transmission
-    - motor : Motor
-    - electronics : Electronics
-    - cockpit : Cockpit
-  }
+class Pedal {
+    target : LinkablePart*
+    --
+    setTarget(p_part : LinkablePart*) : void
+    use(p_pression : float) : void
 }
 
-' ---------- generalisation : parents on top, arrows up ----------
+class Direction {
+    wheels : Wheel[]
+    --
+    turn(p_angle : float) : void
+}
+
+class DAE {
+    direction : Direction*
+    force : float
+    --
+    use(p_angle : float) : void
+}
+
+class SteerWheel {
+    dae : DAE*
+    --
+    turn(p_angle : float) : void
+}
+
+class Brake {
+    wheel : Wheel*
+    --
+    execute(p_force : float) : void
+    attackWheel(p_wheel : Wheel*) : void
+}
+
+class BrakeController {
+    brakes : Brake[]
+    --
+    execute(p_pression : float) : void
+}
+
+class Cockpit {
+    pedal : Pedal
+    steerWheel : SteerWheel
+    gearLever : GearLever
+    --
+    pressPedal(p_pression : float) : void
+    turnSteering(p_angle : float) : void
+    shiftGear() : void
+}
+
+class Electronics {
+    dae : DAE
+}
+
+class Car {
+    brakeController : BrakeController
+    direction : Direction
+    transmission : Transmission
+    motor : Motor
+    electronics : Electronics
+    cockpit : Cockpit
+}
+
+' ------------------------------ inheritance  --------------------------
+
 LinkablePart <|-- Injector
 LinkablePart <|-- BrakeController
-Singleton <|-- GearLever : binds T = GearLever
+SingletonGearLever <|-- GearLever
 
-' ---------- composition : whole BELOW part, links descend ----------
-Motor *-up-- Injector : "1"
-Motor *-up-- ExplosionChamber : "1"
-Motor *-up-- Crankshaft : "1"
-GearLever *-up-- Gear : "1..*"
-BrakeController *-up-- Brake : "4"
-Cockpit *-up-- Pedal : "1"
-Cockpit *-up-- SteerWheel : "1"
-Cockpit *-up-- GearLever : "1"
-Electronics *-up-- DAE : "1"
-Direction *-- Wheel : "wheels 2"
-Car *-up-- BrakeController : "1"
-Car *-up-- Direction : "1"
-Car *-up-- Transmission : "1"
-Car *-up-- Motor : "1"
-Car *-up-- Electronics : "1"
-Car *-up-- Cockpit : "1"
+' ---------- composition (filled diamond = owns the object) ------------
 
-' ---------- aggregation : borrowed pointers, links descend ----------
-Injector o-down-- ExplosionChamber : "1"
-ExplosionChamber o-down-- Crankshaft : "1"
-Crankshaft o-down-- Transmission : "1"
-Motor o-down-- Transmission : "0..1\nconnectToTransmission"
-Transmission o-down-- Wheel : "driven 2"
-Brake o-down-- Wheel : "brakes 1"
-SteerWheel o-down-- DAE : "1"
-DAE o-down-- Direction : "1"
+GearLever *-- Gear
 
-' ---------- polymorphic pedal plug (DIP) ----------
-' One pedal drives any LinkablePart: the Injector (accelerator)
-' or the BrakeController (brake). The pedal only knows the
-' abstraction, never the concrete class.
-Pedal -up-> LinkablePart : "target 0..1\n<<use>>"
+Motor *-- Injector
+Motor *-- ExplosionChamber
+Motor *-- Crankshaft
 
-note top of LinkablePart
-  Abstract plug: anything a Pedal
-  can drive must implement it.
-  Injector = accelerator,
-  BrakeController = brake pedal.
-end note
+Direction *-- Wheel
 
-note bottom of Car
-  Car is the composition root:
-  it owns one of each subsystem
-  and exposes no behaviour itself.
-end note
+BrakeController *-- Brake
+
+Electronics *-- DAE
+
+Cockpit *-- Pedal
+Cockpit *-- SteerWheel
+Cockpit *-- GearLever
+
+Car *-- BrakeController
+Car *-- Direction
+Car *-- Transmission
+Car *-- Motor
+Car *-- Electronics
+Car *-- Cockpit
+
+' ---------- aggregation (empty diamond = references an object) ----------
+
+Transmission o-- Wheel
+
+Crankshaft o-- Transmission
+ExplosionChamber o-- Crankshaft
+Injector o-- ExplosionChamber
+
+Pedal o-- LinkablePart
+
+DAE o-- Direction
+SteerWheel o-- DAE
+
+Brake o-- Wheel
+
+' Motor connects to an external transmission
+Motor o-- Transmission
 
 @enduml

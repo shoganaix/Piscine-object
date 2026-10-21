@@ -49,7 +49,7 @@ the deliverables.
 
 An introduction to Object-Oriented Programming in C++, focused on encapsulation, access control, class responsibilities, and data integrity.
 
-## M00.1 Exercise 00 — the bank
+## Exercise 00 — the bank
 
 `Account` and `Bank` come from the subject's `DivideAndRule.cpp`, where every
 attribute was public. The exercise is to seal both classes so that no illogical
@@ -128,7 +128,7 @@ class Bank
 > must be declared, so it cannot live in a header of its own.
 > It is declared at the top of [`module00/ex00/Bank.hpp:38`](module00/ex00/Bank.hpp).
 
-## M00.2 Exercise 01 — the graph
+## Exercise 01 — the graph
 A small 2D graph system capable of storing points, generating lines, and displaying the result as ASCII art.
 
 `Vector2` is a container for two `float` components. `Graph` holds a size and a list
@@ -197,6 +197,8 @@ The exceptions used are the standard ones, from `<stdexcept>`:
 
 # Module 01: Relationship
 
+## Exercise 01 — What the program does
+
 One exercise, `ex00`, built in four stages. Each stage introduces one relationship
 between objects, and the four of them end up living in the same `Worker` class.
 
@@ -210,13 +212,6 @@ between objects, and the four of them end up living in the same `Worker` class.
 The difference between the first two rows is the whole point of the module, and the
 program prints it: a worker **destroys** his position and his statistic, and
 **leaves behind** his shovel.
-
-## M01.1 What the program does
-
-Every constructor, destructor and method prints, because the subject uses that
-output during the evaluation to follow which code runs and in which order. The
-block titles are the section numbers of the subject, so any line of the trace maps
-back to a requirement.
 
 ### IV.1 Composition
 
@@ -267,7 +262,7 @@ anything while he is registered nowhere, and the last two lines are the destruct
 cleanup: a dying worker tells every workshop it belongs to, so no workshop is left
 holding a pointer to freed memory.
 
-## M01.2 The public surface
+## The public surface
 
 ```cpp
 struct Position                              // IV.1, plain structure as the subject asks
@@ -375,10 +370,6 @@ private:
     std::vector<Worker*>    _workers;       // non owning
 };
 ```
-
-## M01.3 The three bonuses
-
-All three are done. The subject only assesses them if the mandatory part is perfect.
 
 ### Bonus 1 — `GetTool<T>()`
 

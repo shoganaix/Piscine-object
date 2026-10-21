@@ -43,56 +43,6 @@ the deliverables.
 > bonus, so it must be launched from inside `ex01/`, or the file will not be
 > found. A missing file is reported as a clean error, not a crash.
 
-## Repository layout
-
-```
-.
-├── Makefile                  # Root, forwards every goal to the module Makefiles
-├── README.md                 # This file
-├── .gitignore                # Keeps the .o files and the executables out of git
-│
-├── module00
-│   ├── po_module00_subject.pdf   # The subject
-│   ├── ex00/                     # Exercise 00 — "Divide and conquer"
-│   │   ├── Makefile              # NAME = ex00
-│   │   ├── main.cpp              # Demonstration, all the error handling lives here
-│   │   ├── Bank.hpp              # Bank and, nested inside it, the Account class
-│   │   └── Bank.cpp              # Implementation of the above
-│   │
-│   └── ex01/                     # Exercise 01 — "I don't know what I'm doing!"
-│       ├── Makefile              # NAME = ex01
-│       ├── main.cpp              # Demonstration, all the error handling lives here
-│       ├── Vector2.hpp           # A point or a size, two float components
-│       ├── Vector2.cpp           # Implementation of the above
-│       ├── Graph.hpp             # A grid holding a set of points
-│       ├── Graph.cpp             # Implementation of the above
-│       └── points.txt            # Input file for the file-loading bonus
-│
-└── module01
-    ├── po_module01_subject.pdf   # The subject
-    └── ex00/                     # The only exercise, built in four stages
-        ├── Makefile              # NAME = ex00
-        ├── main.cpp              # The demonstration, one block per section
-        ├── Position.hpp/.cpp     # IV.1 — the composition ingredient #1
-        ├── Statistic.hpp/.cpp    # IV.1 — the composition ingredient #2
-        ├── Tool.hpp/.cpp         # IV.3 — the abstract base, IV.2 — the shared counter
-        ├── Shovel.hpp/.cpp       # IV.2/IV.3 — a Tool that digs
-        ├── Hammer.hpp/.cpp       # IV.3 — a second Tool, so the base is justified
-        ├── Worker.hpp/.cpp       # IV.1 composition + IV.2 aggregation + IV.4 association
-        └── Workshop.hpp/.cpp     # IV.4 association + the two tool related bonuses
-│
-└── module02
-    ├── en.subject.pdf            # The subject
-    ├── Makefile                  # Forwards every goal to its own exercises
-    └── ex00/                     # The only exercise, a UML class diagram
-        ├── Makefile              # Regenerates the PNGs when PlantUML exists
-        ├── subject.puml          # Class diagram source (mandatory + bonuses 1-3)
-        ├── subject.png           # The deliverable, rendered from subject.puml
-        ├── sequence_accel.puml/.png  # Bonus 4 — acceleration scenario
-        ├── sequence_brake.puml/.png  # Bonus 4 — braking scenario
-        └── sequence_steer.puml/.png  # Bonus 4 — steering scenario
-```
-
 ---
 
 # Module 00: Encapsulation
@@ -103,15 +53,16 @@ action is possible.
 
 ## M00.1 Exercise 00 — the bank
 
+### What is encapsulation
+Encapsulation is a core principle of Object-Oriented Programming (OOP). It means bundling data (variables) and methods (functions) into a single unit (a class) and restricting direct access to some of the object's components
+
 ### What the program does
 
 ```
 === Creation of the bank ===
-Bank informations :
 Liquidity : 999
 
 === Account creation ===
-Bank informations :
 Liquidity : 999
 [0] - [100]
 [1] - [100]
@@ -120,11 +71,13 @@ Liquidity : 999
 Alice now owns : 480
 Bank liquidity : 1019
 Alice id is still : 0
+
 === Loans ===
 Loan of 200 granted : 1
 Bob now owns : 300
 Loan of 100000 granted : 0
 Liquidity untouched : 819
+
 === Account deletion ===
 Accounts left : 1
 Bob id after the deletion : 1

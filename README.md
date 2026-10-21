@@ -143,43 +143,10 @@ of points, and renders them as ASCII art.
 
 ### What the program does
 
-The first block is the exact example from the subject, produced byte for byte:
-
-```
->& 0 1 2 3 4 5
->& 0 X . . . . .
->& 1 . . . . . .
->& 2 . . X . X .
->& 3 . . . . . .
->& 4 . . X . . .
->& 5 . . . . . .
-```
-
-The line bonus, an horizontal segment followed by a vertical one:
-
-```
->& 0 1 2 3 4 5 6 7
->& 0 . . . . . . . .
->& 1 X X X X X X X .
->& 2 . . . . . . X .
->& 3 . . . . . . X .
-```
-
-And the file-loading bonus, from [`module00/ex01/points.txt`](module00/ex01/points.txt):
-
-```
->& 0 1 2 3 4 5 6 7 8 9
->& 0 X . . . X X . . . X
->& 1 . . . . X X . . . .
->& 2 . . . . X X . . . .
->& 3 . . . . X X . . . .
->& 4 . . . . X X . . . .
->& 5 X . . . X X . . . X
-```
-
-The file format is one point per line as `x y`. Blank lines are skipped, and
-everything after a `#` is a comment. Every point still goes through `addPoint()`, so
-the bounds validation applies exactly as if the points had been typed in by hand.
+> With a file-loading bonus, from [`module00/ex01/points.txt`](module00/ex01/points.txt)
+> The file format is one point per line as `x y`. Blank lines are skipped, and
+> everything after a `#` is a comment. Every point still goes through `addPoint()`, so
+> the bounds validation applies exactly as if the points had been typed in by hand.
 
 ### The public surface
 
